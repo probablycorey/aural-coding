@@ -1,5 +1,6 @@
 $ = require 'jquery'
-piano = require '../acoustic_grand_piano-ogg.js'
+piano = require '../acoustic_grand_piano-ogg'
+drum = require '../synth_drum-ogg'
 Base64Binary = require './base64binary'
 
 noteToKey = {} # C8  == 108
@@ -27,11 +28,13 @@ while key <= LAST_NOTE
 module.exports =
   context: null
   keys: null
+  drums: null
   sources: null
 
   activate: ->
     @context = new webkitAudioContext()
     @keys = {}
+    @drums = {}
     @sources = {}
     $(document).on "keydown", (e) => @noteOn(e)
     $(document).on "keyup", (e) => @noteOff(e)
@@ -40,44 +43,58 @@ module.exports =
         soundData = Base64Binary.decodeArrayBuffer(piano[note].split(",")[1])
         @context.decodeAudioData soundData, (soundBuffer) => @keys[key] = soundBuffer
 
+        soundData = Base64Binary.decodeArrayBuffer(drum[note].split(",")[1])
+        @context.decodeAudioData soundData, (soundBuffer) => @drums[key] = soundBuffer
 
-  keyForEvent: (event) ->
+  bufferForEvent: (event) ->
     keyCode = event.which
     firstLetter = "A".charCodeAt(0)
     lastLetter = "Z".charCodeAt(0)
 
-    if keyCode >= firstLetter && keyCode <= LAST_NOTE
+    if keyCode >= firstLetter && keyCode <= lastLetter
       if event.shiftKey
         index = keyCode - firstLetter + FIRST_NOTE + 12
       else
         index = keyCode - firstLetter + FIRST_NOTE
+      return {buffer: @keys[majorScale[index]]}
     else
-      return null
+      return null if /meta|shift|control|alt/.test event.keystrokes
+      [index, velocity] = switch event.keystrokes
+        when 'backspace' then [49, 1]
+        when 'delete' then [50, 1]
+        when 'space' then [41, 0.025]
+        when '\t' then [41]
+        when '.' then [56]
+        when '"' then [57]
+        when '\'' then [58]
+        when '+' then [61]
+        when '[' then [36]
+        when ']' then [37]
+        when '(' then [38]
+        when ')' then [39]
+        when '!' then [54, 2]
+        else [45]
 
-    console.log majorScale
-    majorScale[index]
+      return {buffer: @drums[index], velocity: velocity ? 0.2}
 
   noteOn: (event) ->
-    key = @keyForEvent(event)
-    return unless key
-    return if @sources[key]?.playbackState == 2
+    {buffer, velocity} = @bufferForEvent(event)
+    return unless buffer
+    return if @sources[event.which]?.playbackState == 2
 
     gainNode = @context.createGainNode()
     gainNode.connect(@context.destination)
-    gainNode.gain.value = 2;
+    gainNode.gain.value = velocity;
 
     source = @context.createBufferSource()
-    @sources[key] = source
-    source.buffer = @keys[key]
+    @sources[event.which] = source
+    source.buffer = buffer
     source.connect(gainNode);
     source.noteOn(0)
 
   noteOff: (event) ->
-    key = @keyForEvent(event)
-    return unless key
-
-    if source = @sources[key]
-      @sources[key] = null
+    if source = @sources[event.which]
+      @sources[event.which] = null
       source.gain.linearRampToValueAtTime(1, @context.currentTime)
-      source.gain.linearRampToValueAtTime(0, @context.currentTime + 0.2)
-      source.noteOff(@context.currentTime + 0.3)
+      source.gain.linearRampToValueAtTime(0, @context.currentTime + 0.5)
+      source.noteOff(@context.currentTime + 0.6)
