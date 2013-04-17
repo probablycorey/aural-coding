@@ -58,7 +58,7 @@ module.exports =
         index = keyCode - firstLetter + FIRST_NOTE
       return {buffer: @keys[majorScale[index]]}
     else
-      return null if /meta|shift|control|alt/.test event.keystrokes
+      return {} if /meta|shift|control|alt/.test event.keystrokes
       [index, velocity] = switch event.keystrokes
         when 'backspace' then [49, 1]
         when 'delete' then [50, 1]
