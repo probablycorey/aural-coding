@@ -33,7 +33,10 @@ module.exports =
       @noteForKey[key] = noteName
 
     @majorScaleNotes = [@firstKey...@lastKey].filter (key, index) =>
-      (index % 12) in [0,2,4,5,7,9,11]
+      # C Major Scale. (I think?)
+      ((index + 4) % 12) in [0,2,4,5,7,9,11]
+
+    console.log @majorScaleNotes
 
     $(document).on "keydown", (e) => @noteOn(e)
     $(document).on "keyup", (e) => @noteOff(e)
@@ -52,12 +55,8 @@ module.exports =
     lastLetter = "Z".charCodeAt(0)
 
     if keyCode >= firstLetter && keyCode <= lastLetter
-      if event.shiftKey
-        index = keyCode - firstLetter + 12
-      else
-        index = keyCode - firstLetter
-        console.log @noteForKey[@majorScaleNotes[index]]
-        @noteForKey[@majorScaleNotes[index]]
+      index = 24 + (keyCode - firstLetter) % 12
+      index += 12 if event.shiftKey
       return {buffer: @keys[@majorScaleNotes[index]]}
     else
       return {} if /meta|shift|control|alt/.test event.keystrokes
