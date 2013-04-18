@@ -10,6 +10,7 @@ module.exports =
   context: null
   allNoteNames: null
   keyForNoteName: null
+  noteForKey: null
   majorScaleNotes: null
   keys: null
   drums: null
@@ -21,13 +22,18 @@ module.exports =
     @drums = {}
     @sources = {}
     @keyForNoteName = {}
-    @allNoteNames = [@firstKey...@lastKey].map (key) =>
+    @noteForKey = {}
+    @allNoteNames = []
+
+    for key in [@firstKey...@lastKey]
       octave = Math.floor((key - 12) / 12)
       noteName = @noteNames[key % 12] + octave
+      @allNoteNames.push noteName
       @keyForNoteName[noteName] = key
-      noteName
+      @noteForKey[key] = noteName
 
-    @majorScaleNotes = [@firstKey...@lastKey].filter (key, index) => (index % 12) in [0,2,4,5,7,9,11]
+    @majorScaleNotes = [@firstKey...@lastKey].filter (key, index) =>
+      (index % 12) in [0,2,4,5,7,9,11]
 
     $(document).on "keydown", (e) => @noteOn(e)
     $(document).on "keyup", (e) => @noteOff(e)
@@ -47,9 +53,11 @@ module.exports =
 
     if keyCode >= firstLetter && keyCode <= lastLetter
       if event.shiftKey
-        index = keyCode - firstLetter + @firstKey + 12
+        index = keyCode - firstLetter + 12
       else
-        index = keyCode - firstLetter + @firstKey
+        index = keyCode - firstLetter
+        console.log @noteForKey[@majorScaleNotes[index]]
+        @noteForKey[@majorScaleNotes[index]]
       return {buffer: @keys[@majorScaleNotes[index]]}
     else
       return {} if /meta|shift|control|alt/.test event.keystrokes
