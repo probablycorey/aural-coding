@@ -3,30 +3,14 @@ piano = require '../acoustic_grand_piano-ogg'
 drum = require '../synth_drum-ogg'
 Base64Binary = require './base64binary'
 
-noteToKey = {} # C8  == 108
-keyToNote = {} # 108 ==  C8
-
-FIRST_NOTE = 0x15 # first note
-LAST_NOTE = 0x6C # last note
-
-noteNames = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
-for key in [FIRST_NOTE...LAST_NOTE]
-  octave = Math.floor((key - 12) / 12)
-  name = noteNames[key % 12] + octave
-  noteToKey[name] = key
-  keyToNote[key] = name
-
-majorScalePattern = [2,2,1,2,2,2,1]
-majorScaleIndex = 0
-majorScale = []
-key = FIRST_NOTE
-while key <= LAST_NOTE
-  majorScale.push(key)
-  key += majorScalePattern[majorScaleIndex]
-  majorScaleIndex = (majorScaleIndex + 1) % majorScalePattern.length
-
 module.exports =
+  firstKey: 0x15
+  lastKey: 0x6C
+  noteNames: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
   context: null
+  allNoteNames: null
+  keyForNoteName: null
+  majorScaleNotes: null
   keys: null
   drums: null
   sources: null
@@ -36,15 +20,25 @@ module.exports =
     @keys = {}
     @drums = {}
     @sources = {}
+    @keyForNoteName = {}
+    @allNoteNames = [@firstKey...@lastKey].map (key) =>
+      octave = Math.floor((key - 12) / 12)
+      noteName = @noteNames[key % 12] + octave
+      @keyForNoteName[noteName] = key
+      noteName
+
+    @majorScaleNotes = [@firstKey...@lastKey].filter (key, index) => (index % 12) in [0,2,4,5,7,9,11]
+
     $(document).on "keydown", (e) => @noteOn(e)
     $(document).on "keyup", (e) => @noteOff(e)
-    for note, key of noteToKey
-      do (key) =>
-        soundData = Base64Binary.decodeArrayBuffer(piano[note].split(",")[1])
-        @context.decodeAudioData soundData, (soundBuffer) => @keys[key] = soundBuffer
 
-        soundData = Base64Binary.decodeArrayBuffer(drum[note].split(",")[1])
-        @context.decodeAudioData soundData, (soundBuffer) => @drums[key] = soundBuffer
+    for noteName in @allNoteNames
+      do (noteName) =>
+        soundData = Base64Binary.decodeArrayBuffer(piano[noteName].split(",")[1])
+        @context.decodeAudioData soundData, (soundBuffer) => @keys[@keyForNoteName[noteName]] = soundBuffer
+
+        soundData = Base64Binary.decodeArrayBuffer(drum[noteName].split(",")[1])
+        @context.decodeAudioData soundData, (soundBuffer) => @drums[@keyForNoteName[noteName]] = soundBuffer
 
   bufferForEvent: (event) ->
     keyCode = event.which
@@ -53,15 +47,15 @@ module.exports =
 
     if keyCode >= firstLetter && keyCode <= lastLetter
       if event.shiftKey
-        index = keyCode - firstLetter + FIRST_NOTE + 12
+        index = keyCode - firstLetter + @firstKey + 12
       else
-        index = keyCode - firstLetter + FIRST_NOTE
-      return {buffer: @keys[majorScale[index]]}
+        index = keyCode - firstLetter + @firstKey
+      return {buffer: @keys[@majorScaleNotes[index]]}
     else
       return {} if /meta|shift|control|alt/.test event.keystrokes
       [index, velocity] = switch event.keystrokes
-        when 'backspace' then [49, 1]
-        when 'delete' then [50, 1]
+        when 'backspace' then [50, 1]
+        when 'delete' then [49, 1]
         when 'space' then [41, 0.025]
         when '\t' then [41]
         when '.' then [56]
