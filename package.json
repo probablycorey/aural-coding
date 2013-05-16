@@ -1,0 +1,18 @@
+{
+  "name": "aural-coding",
+  "version": "0.0.0",
+  "main": "./lib/audio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atom/aural-coding.git"
+  },
+  "bugs": {
+    "url": "https://github.com/atom/aural-coding/issues"
+  },
+  "engines": {
+    "atom": "*"
+  },
+  "publishConfig": {
+    "registry": "https://atom.iriscouch.com/registry/_design/app/_rewrite"
+  }
+}
