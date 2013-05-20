@@ -1,5 +1,6 @@
 {
   "name": "aural-coding",
+  "description": "Make sweet music while typing terrible code",
   "version": "0.1.0",
   "main": "./lib/audio",
   "repository": {
