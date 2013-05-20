@@ -36,8 +36,6 @@ module.exports =
       # C Major Scale. (I think?)
       ((index + 4) % 12) in [0,2,4,5,7,9,11]
 
-    console.log @majorScaleNotes
-
     $(document).on "keydown", (e) => @noteOn(e)
     $(document).on "keyup", (e) => @noteOff(e)
 
