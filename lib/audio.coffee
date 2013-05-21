@@ -3,7 +3,7 @@ piano = require '../acoustic_grand_piano-ogg'
 drum = require '../synth_drum-ogg'
 Base64Binary = require './base64binary'
 
-module.exports =
+class Audio
   firstKey: 0x15
   lastKey: 0x6C
   noteNames: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
@@ -16,7 +16,7 @@ module.exports =
   drums: null
   sources: null
 
-  activate: ->
+  constructor: ->
     @context = new webkitAudioContext()
     @keys = {}
     @drums = {}
@@ -36,8 +36,8 @@ module.exports =
       # C Major Scale. (I think?)
       ((index + 4) % 12) in [0,2,4,5,7,9,11]
 
-    $(document).on "keydown", (e) => @noteOn(e)
-    $(document).on "keyup", (e) => @noteOff(e)
+    @subscribe $(document), "keydown", (e) => @noteOn(e)
+    @subscribe $(document), "keyup", (e) => @noteOff(e)
 
     for noteName in @allNoteNames
       do (noteName) =>
@@ -97,3 +97,15 @@ module.exports =
       source.gain.linearRampToValueAtTime(1, @context.currentTime)
       source.gain.linearRampToValueAtTime(0, @context.currentTime + 0.5)
       source.noteOff(@context.currentTime + 0.6)
+
+require('underscore').extend(Audio.prototype, require('subscriber'))
+
+module.exports =
+  audio: null
+
+  activate: ->
+    @audio = new Audio()
+
+  deactivate: ->
+    @audio?.unsubscribe()
+    @audio = null
