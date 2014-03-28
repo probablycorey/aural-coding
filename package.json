@@ -2,7 +2,7 @@
   "name": "aural-coding",
   "description": "Make sweet music while typing terrible code",
   "version": "0.3.0",
-  "main": "./lib/audio",
+  "main": "./lib/main",
   "author": {
     "name": "Corey Johnson",
     "email": "cj@github.com",
