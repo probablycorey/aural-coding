@@ -1,11 +1,11 @@
-Audio = require './audio.coffee'
+AuralCoding = require './aural-coding'
 
 module.exports =
-  audio: null
+  auralCoding: null
 
   activate: ->
-    @audio = new Audio()
+    @auralCoding = new AuralCoding()
 
   deactivate: ->
-    @audio?.unsubscribe()
-    @audio = null
+    @auralCoding?.unsubscribe()
+    @auralCoding = null

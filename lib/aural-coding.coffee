@@ -3,7 +3,7 @@ piano = require '../acoustic_grand_piano-ogg'
 drum = require '../synth_drum-ogg'
 Base64Binary = require './base64binary'
 
-class Audio
+class AuralCoding
   firstKey: 0x15
   lastKey: 0x6C
   noteNames: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
