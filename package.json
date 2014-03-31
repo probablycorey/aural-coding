@@ -3,22 +3,8 @@
   "description": "Make sweet music while typing terrible code",
   "version": "0.3.0",
   "main": "./lib/main",
-  "author": {
-    "name": "Corey Johnson",
-    "email": "cj@github.com",
-    "url": "http://github.com/probablycorey"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/atom/aural-coding.git"
-  },
-  "bugs": {
-    "url": "https://github.com/atom/aural-coding/issues"
-  },
-  "engines": {
-    "atom": "*"
-  },
-  "publishConfig": {
-    "registry": "https://atom.iriscouch.com/registry/_design/app/_rewrite"
+  "repository": "https://github.com/atom/aural-coding.git",
+  "dependencies": {
+    "emissary": "^1.2.0"
   }
 }
