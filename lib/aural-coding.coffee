@@ -1,7 +1,8 @@
-$ = require 'jquery'
-piano = require '../acoustic_grand_piano-ogg'
-drum = require '../synth_drum-ogg'
-Base64Binary = require './base64binary'
+{$} = require 'atom'
+Base64Binary = require '../vendor/base64binary'
+piano = require '../vendor/acoustic_grand_piano-ogg'
+drum = require '../vendor/synth_drum-ogg'
+{Subscriber} = require "emissary"
 
 module.exports =
 class AuralCoding
