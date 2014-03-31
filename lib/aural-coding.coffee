@@ -6,19 +6,12 @@ drum = require '../vendor/synth_drum-ogg'
 
 module.exports =
 class AuralCoding
-  firstKey: 0x15
-  lastKey: 0x6C
-  noteNames: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
-  context: null
-  allNoteNames: null
-  keyForNoteName: null
-  noteForKey: null
-  majorScaleNotes: null
-  keys: null
-  drums: null
-  sources: null
+  Subscriber.includeInto(this)
 
   constructor: ->
+    @firstKey = 0x15
+    @lastKey = 0x6C
+    @noteNames = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
     @context = new webkitAudioContext()
     @keys = {}
     @drums = {}
@@ -35,8 +28,7 @@ class AuralCoding
       @noteForKey[key] = noteName
 
     @majorScaleNotes = [@firstKey...@lastKey].filter (key, index) =>
-      # C Major Scale. (I think?)
-      ((index + 4) % 12) in [0,2,4,5,7,9,11]
+      ((index + 4) % 12) in [0,2,4,5,7,9,11] # C Major Scale. (I think?)
 
     @subscribe $(document), "keydown", (e) => @noteOn(e)
     @subscribe $(document), "keyup", (e) => @noteOff(e)
@@ -49,18 +41,16 @@ class AuralCoding
         soundData = Base64Binary.decodeArrayBuffer(drum[noteName].split(",")[1])
         @context.decodeAudioData soundData, (soundBuffer) => @drums[@keyForNoteName[noteName]] = soundBuffer
 
-  bufferForEvent: (event) ->
-    keyCode = event.which
-    firstLetter = "A".charCodeAt(0)
-    lastLetter = "Z".charCodeAt(0)
+  bufferForEvent: (key, modifiers) ->
+    return unless key
 
-    if keyCode >= firstLetter && keyCode <= lastLetter
-      index = 24 + (keyCode - firstLetter) % 12
-      index += 12 if event.shiftKey
+    if /^[a-z]$/i.test key
+      keyCode = key.toUpperCase().charCodeAt(0)
+      index = 24 + (keyCode - 'A'.charCodeAt(0)) % 12
+      index += 12 if /[A-Z]/.test key
       return {buffer: @keys[@majorScaleNotes[index]]}
     else
-      return {} if /meta|shift|control|alt/.test event.keystrokes
-      [index, velocity] = switch event.keystrokes
+      [index, velocity] = switch key
         when 'backspace' then [50, 1]
         when 'delete' then [49, 1]
         when 'space' then [41, 0.025]
@@ -79,7 +69,9 @@ class AuralCoding
       return {buffer: @drums[index], velocity: velocity ? 0.2}
 
   noteOn: (event) ->
-    {buffer, velocity} = @bufferForEvent(event)
+    {key, modifiers} = @keystrokeForKeyboardEvent(event)
+    return unless key
+    {buffer, velocity} = @bufferForEvent(key, modifiers)
     return unless buffer
     return if @sources[event.which]?.playbackState == 2
 
@@ -100,14 +92,42 @@ class AuralCoding
       source.gain.linearRampToValueAtTime(0, @context.currentTime + 0.5)
       source.noteOff(@context.currentTime + 0.6)
 
-require('underscore').extend(Audio.prototype, require('subscriber'))
+  keystrokeForKeyboardEvent: (event) ->
+    keyIdentifier = event.originalEvent.keyIdentifier
+    if keyIdentifier.indexOf('U+') is 0
+      hexCharCode = keyIdentifier[2..]
+      charCode = parseInt(hexCharCode, 16)
+      charCode = event.which if not @isAscii(charCode) and @isAscii(event.which)
+      key = @keyFromCharCode(charCode)
+    else
+      key = keyIdentifier.toLowerCase()
 
-module.exports =
-  audio: null
+    modifiers = []
+    modifiers.push 'ctrl' if event.ctrlKey
+    modifiers.push 'alt' if event.altKey
+    if event.shiftKey
+      # Don't push 'shift' when modifying symbolic characters like '{'
+      modifiers.push 'shift' unless /^[^A-Za-z]$/.test(key)
+      # Only upper case alphabetic characters like 'a'
+      key = key.toUpperCase() if /^[a-z]$/.test(key)
+    else
+      key = key.toLowerCase() if /^[A-Z]$/.test(key)
 
-  activate: ->
-    @audio = new Audio()
+    modifiers.push 'cmd' if event.metaKey
 
-  deactivate: ->
-    @audio?.unsubscribe()
-    @audio = null
+    key = null if key in ['meta', 'shift', 'control', 'alt']
+
+    {key, modifiers}
+
+  keyFromCharCode: (charCode) ->
+    switch charCode
+      when 8 then 'backspace'
+      when 9 then 'tab'
+      when 13 then 'enter'
+      when 27 then 'escape'
+      when 32 then 'space'
+      when 127 then 'delete'
+      else String.fromCharCode(charCode)
+
+  isAscii: (charCode) ->
+    0 <= charCode <= 127
