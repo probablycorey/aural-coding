@@ -1,6 +1,1 @@
-```
-cd ~/.atom/packages
-git clone git@github.com:atom/keyboard.git
-```
-
-Start atom, start typing
+Start Atom, open your ears and start typing.
