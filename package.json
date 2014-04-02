@@ -3,7 +3,7 @@
   "description": "Make sweet music while typing terrible code",
   "version": "0.3.0",
   "main": "./lib/main",
-  "repository": "https://github.com/atom/aural-coding.git",
+  "repository": "https://github.com/probablycorey/aural-coding.git",
   "dependencies": {
     "emissary": "^1.2.0"
   }
