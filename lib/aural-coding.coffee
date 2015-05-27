@@ -1,18 +1,14 @@
-{$} = require 'atom'
 Base64Binary = require '../vendor/base64binary'
 piano = require '../vendor/acoustic_grand_piano-ogg'
 drum = require '../vendor/synth_drum-ogg'
-{Subscriber} = require "emissary"
 
 module.exports =
 class AuralCoding
-  Subscriber.includeInto(this)
-
   constructor: ->
     @firstKey = 0x15
     @lastKey = 0x6C
     @noteNames = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
-    @context = new webkitAudioContext()
+    @context = new AudioContext()
     @keys = {}
     @drums = {}
     @sources = {}
@@ -30,8 +26,8 @@ class AuralCoding
     @majorScaleNotes = [@firstKey...@lastKey].filter (key, index) =>
       ((index + 4) % 12) in [0,2,4,5,7,9,11] # C Major Scale. (I think?)
 
-    @subscribe $(document), "keydown", (e) => @noteOn(e)
-    @subscribe $(document), "keyup", (e) => @noteOff(e)
+    atom.views.getView(atom.workspace).addEventListener 'keydown', (e) => @noteOn(e)
+    atom.views.getView(atom.workspace).addEventListener 'onkeyup', (e) => @noteOff(e)
 
     for noteName in @allNoteNames
       do (noteName) =>
@@ -69,13 +65,14 @@ class AuralCoding
       return {buffer: @drums[index], velocity: velocity ? 0.2}
 
   noteOn: (event) ->
+    console.log event
     {key, modifiers} = @keystrokeForKeyboardEvent(event)
     return unless key
     {buffer, velocity} = @bufferForEvent(key, modifiers)
     return unless buffer
     return if @sources[event.which]?.playbackState == 2
 
-    gainNode = @context.createGainNode()
+    gainNode = @context.createGain()
     gainNode.connect(@context.destination)
     gainNode.gain.value = velocity;
 
@@ -83,17 +80,17 @@ class AuralCoding
     @sources[event.which] = source
     source.buffer = buffer
     source.connect(gainNode);
-    source.noteOn(0)
+    source.start(0)
 
   noteOff: (event) ->
     if source = @sources[event.which]
       @sources[event.which] = null
       source.gain.linearRampToValueAtTime(1, @context.currentTime)
       source.gain.linearRampToValueAtTime(0, @context.currentTime + 0.5)
-      source.noteOff(@context.currentTime + 0.6)
+      source.stop(@context.currentTime + 0.6)
 
   keystrokeForKeyboardEvent: (event) ->
-    keyIdentifier = event.originalEvent.keyIdentifier
+    keyIdentifier = event.keyIdentifier
     if keyIdentifier.indexOf('U+') is 0
       hexCharCode = keyIdentifier[2..]
       charCode = parseInt(hexCharCode, 16)
