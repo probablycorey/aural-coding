@@ -1,7 +1,7 @@
 {
   "name": "aural-coding",
   "description": "Make sweet music while typing wonderful code!",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "main": "./lib/main",
   "repository": "https://github.com/probablycorey/aural-coding.git",
   "dependencies": {
