@@ -44,7 +44,7 @@ class AuralCoding
       keyCode = key.toUpperCase().charCodeAt(0)
       index = 24 + (keyCode - 'A'.charCodeAt(0)) % 12
       index += 12 if /[A-Z]/.test key
-      return {buffer: @keys[@majorScaleNotes[index]]}
+      return {buffer: @keys[@majorScaleNotes[index]], velocity: 1}
     else
       [index, velocity] = switch key
         when 'backspace' then [50, 1]
