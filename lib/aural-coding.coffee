@@ -65,10 +65,15 @@ class AuralCoding
       return {buffer: @drums[index], velocity: velocity ? 0.2}
 
   noteOn: (event) ->
-    console.log event
     {key, modifiers} = @keystrokeForKeyboardEvent(event)
     return unless key
     {buffer, velocity} = @bufferForEvent(key, modifiers)
+
+    unless isFinite(velocity)
+      console.error("#{velocity} is not a finite number.")
+      console.error("key: #{key}")
+      console.error("modifiers: #{modifiers}")
+
     return unless buffer
     return if @sources[event.which]?.playbackState == 2
 
