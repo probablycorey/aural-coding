@@ -65,7 +65,6 @@ class AuralCoding
       return {buffer: @drums[index], velocity: velocity ? 0.2}
 
   noteOn: (event) ->
-    console.log event
     {key, modifiers} = @keystrokeForKeyboardEvent(event)
     return unless key
     {buffer, velocity} = @bufferForEvent(key, modifiers)
