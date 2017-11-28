@@ -95,7 +95,7 @@ class AuralCoding
       source.stop(@context.currentTime + 0.6)
 
   keystrokeForKeyboardEvent: (event) ->
-    keyIdentifier = event.keyIdentifier
+    keyIdentifier = if event.keyIdentifier then event.keyIdentifier else String.fromCharCode(event.keyCode);
     if keyIdentifier.indexOf('U+') is 0
       hexCharCode = keyIdentifier[2..]
       charCode = parseInt(hexCharCode, 16)
